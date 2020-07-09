@@ -12,10 +12,6 @@
         "Tags"               : [ { "Key": "Name", "Value": "SimplechatVPC" } ]
       }
     },
-    "eip": {
-      "Type"       : "AWS::EC2::EIP",
-      "Properties" : { "Domain" : "vpc" }
-    },
     "subnetPub1": {
       "Type"       : "AWS::EC2::Subnet",
       "Properties" : {
@@ -51,14 +47,6 @@
         "VpcId"            : { "Ref": "VPC" },
         "Tags"             : [ { "Key": "Name", "Value": "Private-Subnet-2" } ]
       }
-    },
-    "Nat": {
-      "Type"       : "AWS::EC2::NatGateway",
-      "Properties" : {
-        "AllocationId"     : { "Fn::GetAtt" : ["eip", "AllocationId"] },
-        "SubnetId"         : { "Ref" : "subnetPub1" }
-      },
-      "DependsOn"  : "eip"
     },
     "IGW": {
       "Type"       : "AWS::EC2::InternetGateway",
@@ -128,10 +116,84 @@
       "Type"           : "AWS::EC2::Route",
       "Properties"     : {
         "DestinationCidrBlock"  : "0.0.0.0/0",
-        "RouteTableId"          : { "Ref": "RouteTablePrivate" },
-        "NatGatewayId"          : { "Ref" : "Nat" }
+        "RouteTableId"          : { "Ref": "RouteTablePrivate" }
       },
-      "DependsOn"      : [ "Nat" , "subnetRoutePrv1", "subnetRoutePrv2" ]
+      "DependsOn"      : [ "subnetRoutePrv1", "subnetRoutePrv2" ]
+    },
+    "WebServerSecurityGroup": {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription": "simplechat_web_sg",
+        "GroupName" : "simplechat_web_sg",
+        "VpcId": { "Ref" : "VPC" },
+        "SecurityGroupIngress" : [
+          { "IpProtocol" : "tcp",
+            "FromPort" : "80",
+            "ToPort" : "80",
+            "SourceSecurityGroupId" : { "CidrIp" : "0.0.0.0/0" } }
+        ]
+    },
+    "RDSSecurityGroup" : {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription" : "simplechat_db_sg",
+        "GroupName" : "simplechat_db_sg",
+        "VpcId" : { "Ref" : "VPC" },
+        "SecurityGroupIngress" : [
+          { "IpProtocol" : "tcp",
+            "FromPort" : "3306",
+            "ToPort" : "3306",
+            "SourceSecurityGroupId" : { "Ref" : "WebServerSecurityGroup" } }
+        ]
+      }
+    },
+    "DbSubnetGroup": {
+      "Type": "AWS::RDS::DBSubnetGroup",
+      "Properties": {
+        "DBSubnetGroupName": "simplechat_db_subnet",
+        "DBSubnetGroupDescription": "simplechat_db_subnet",
+        "SubnetIds": [ {"Ref": "subnetPrv1"}, {"Ref": "subnetPrv2"} ]
+      }
+    },
+    "DBParameterGroup": {
+      "Type": "AWS::RDS::DBParameterGroup",
+      "Properties": {
+        "Description": "simplechat parameter group",
+        "Family": "mysql5.7",
+        "Parameters": {
+          "character_set_client": "utf8mb4",
+          "character_set_connection": "utf8mb4",
+          "character_set_database": "utf8mb4",
+          "character_set_results": "utf8mb4",
+          "character_set_server": "utf8mb4",
+          "collation_connection": "utf8mb4_bin",
+          "collation_server": "utf8mb4_bin"
+        }
+      }
+    },
+    "DbInstance": {
+      "Type": "AWS::RDS::DBInstance",
+      "Properties": {
+        "Engine": "MySQL",
+        "MySQLMajorVersion": "5.7",
+        "AllocatedStorage": "5",
+        "MasterUsername": "root",
+        "MasterUserPassword": "simplechat",
+        "DBInstanceClass": "db.t2.micro",
+        "DBSubnetGroupName": { "Ref": "DbSubnetGroup" },
+        "DBParameterGroupName": { "Ref": "DBParameterGroup" },
+        "VPCSecurityGroups": [ { "Ref": "RDSSecurityGroup"} ]
+      }
+    },
+    "Cloud9Env": {
+      "Type": "AWS::Cloud9::EnvironmentEC2",
+      "Properties": {
+        "Name": "simplechat_cloud9_env",
+        "Description": "simplechat_cloud9_env",
+        "AutomaticStopTimeMinutes": "1440",
+        "InstanceType": "t2.micro",
+        "SubnetId": { "Ref": "subnetPub1" }
+      }
     }
   }
 }

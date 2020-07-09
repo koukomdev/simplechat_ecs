@@ -39,8 +39,8 @@ class MyApp < Sinatra::Base
       client = Mysql2::Client.new(
         :host     => host,
         :port     => '3306',
-        :username => 'root',
-        :password => '',
+        :username => ENV['DB_USER'],
+        :password => ENV['DB_PASS'],
         :database => 'simplechat',
         :encoding => 'utf8mb4',
         :datatbase_timezone => "Asia/Tokyo"
