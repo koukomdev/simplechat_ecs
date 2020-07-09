@@ -176,7 +176,7 @@
       "Type": "AWS::RDS::DBInstance",
       "Properties": {
         "Engine": "MySQL",
-        "MySQLMajorVersion": "5.7",
+        "EngineVersion": "5.7.22",
         "AllocatedStorage": "5",
         "MasterUsername": "root",
         "MasterUserPassword": "simplechat",
