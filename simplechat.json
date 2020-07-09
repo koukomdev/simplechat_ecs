@@ -12,6 +12,10 @@
         "Tags"               : [ { "Key": "Name", "Value": "SimplechatVPC" } ]
       }
     },
+    "eip": {
+      "Type"       : "AWS::EC2::EIP",
+      "Properties" : { "Domain" : "vpc" }
+    },
     "subnetPub1": {
       "Type"       : "AWS::EC2::Subnet",
       "Properties" : {
@@ -47,6 +51,14 @@
         "VpcId"            : { "Ref": "VPC" },
         "Tags"             : [ { "Key": "Name", "Value": "Private-Subnet-2" } ]
       }
+    },
+    "Nat": {
+      "Type"       : "AWS::EC2::NatGateway",
+      "Properties" : {
+        "AllocationId"     : { "Fn::GetAtt" : ["eip", "AllocationId"] },
+        "SubnetId"         : { "Ref" : "subnetPub1" }
+      },
+      "DependsOn"  : "eip"
     },
     "IGW": {
       "Type"       : "AWS::EC2::InternetGateway",
@@ -116,9 +128,10 @@
       "Type"           : "AWS::EC2::Route",
       "Properties"     : {
         "DestinationCidrBlock"  : "0.0.0.0/0",
-        "RouteTableId"          : { "Ref": "RouteTablePrivate" }
+        "RouteTableId"          : { "Ref": "RouteTablePrivate" },
+        "NatGatewayId"          : { "Ref" : "Nat" }
       },
-      "DependsOn"      : [ "subnetRoutePrv1", "subnetRoutePrv2" ]
+      "DependsOn"      : [ "Nat" , "subnetRoutePrv1", "subnetRoutePrv2" ]
     },
     "WebServerSecurityGroup": {
       "Type" : "AWS::EC2::SecurityGroup",
@@ -175,6 +188,7 @@
     "DbInstance": {
       "Type": "AWS::RDS::DBInstance",
       "Properties": {
+        "DBInstanceIdentifier": "simplechat-ecs-db",
         "Engine": "MySQL",
         "EngineVersion": "5.7.22",
         "AllocatedStorage": "5",
