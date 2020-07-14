@@ -133,6 +133,20 @@
       },
       "DependsOn"      : [ "Nat" , "subnetRoutePrv1", "subnetRoutePrv2" ]
     },
+    "LoadBalancerSecurityGroup": {
+      "Type" : "AWS::EC2::SecurityGroup",
+      "Properties" : {
+        "GroupDescription": "simplechat_lb_sg",
+        "GroupName" : "simplechat_lb_sg",
+        "VpcId": { "Ref" : "VPC" },
+        "SecurityGroupIngress" : [
+          { "IpProtocol" : "tcp",
+            "FromPort" : "80",
+            "ToPort" : "80",
+            "CidrIp" : "0.0.0.0/0" }
+        ]
+      }
+    },
     "WebServerSecurityGroup": {
       "Type" : "AWS::EC2::SecurityGroup",
       "Properties" : {
@@ -143,7 +157,7 @@
           { "IpProtocol" : "tcp",
             "FromPort" : "80",
             "ToPort" : "80",
-            "CidrIp" : "0.0.0.0/0" }
+            "SourceSecurityGroupId" : { "Ref" : "LoadBalancerSecurityGroup" } }
         ]
       }
     },
