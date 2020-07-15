@@ -1,6 +1,9 @@
 FROM ruby:2.5.8-alpine
 
-RUN apk --no-cache add --update build-base libffi-dev mariadb-dev mariadb-client tzdata bash
+RUN apk --no-cache add --update build-base libffi-dev mariadb-dev mariadb-client tzdata bash && \
+    cp /usr/share/zoneinfo/Asia/Tokyo /etc/localtime && \
+    apk del tzdata && \
+    rm -rf /var/cache/apk/*
 
 WORKDIR /app
 
