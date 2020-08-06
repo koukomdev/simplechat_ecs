@@ -7,11 +7,11 @@
             <% if session[:user_id] %>
                 <strong>
                     <span class="navbar-brand">　<i class="fa fa-user"></i> <%= session[:username] %></span> 
-                    <a href="/signout" class="navbar-brand"> <i class="fa fa-sign-out"></i> </a>
+                    <a href="/signout" class="navbar-brand"> <i class="fa fa-sign-out-alt"></i> </a>
                 </strong>
             <% else %>
                 <strong class="navbar-brand">
-                    <a href="/signin" class="navbar-brand">ログイン <i class="fa fa-sign-in"></i> </a>
+                    <a href="/signin" class="navbar-brand">ログイン <i class="fa fa-sign-in-alt"></i> </a>
                 </strong>
             <% end %>
         </div>
